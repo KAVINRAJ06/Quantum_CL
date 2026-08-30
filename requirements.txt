@@ -1,0 +1,7 @@
+torch>=2.2
+torchvision>=0.17
+transformers>=4.45
+pennylane>=0.38
+Pillow>=10.0
+numpy>=1.26
+tqdm>=4.66

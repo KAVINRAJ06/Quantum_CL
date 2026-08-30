@@ -1,0 +1,7 @@
+# Colab already includes a compatible PyTorch build. Do not reinstall it.
+transformers>=4.45,<5
+pennylane>=0.38
+Pillow>=10
+numpy>=1.26
+tqdm>=4.66
+kaggle>=1.6
