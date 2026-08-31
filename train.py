@@ -16,6 +16,13 @@ def miou(logits, masks, classes):
         if union > 0: values.append(intersection / union)
     return torch.stack(values).mean().item() if values else 0.0
 
+def validate_targets(masks, classes):
+    valid = masks[masks != 255]
+    if valid.numel() and (valid.min() < 0 or valid.max() >= classes):
+        raise ValueError(
+            f"Mask labels must be in [0, {classes - 1}] or 255 (ignore); "
+            f"received [{valid.min().item()}, {valid.max().item()}]."
+        )
 def make_loader(data, split, args, shuffle=False):
     allowed = {"images", "masks", "image_suffix", "mask_suffix", "recursive", "palette"}
     kwargs = {key: value for key, value in data.items() if key in allowed}
@@ -43,6 +50,7 @@ def main(args):
         for epoch in range(args.epochs_per_task):
             model.train()
             for images, masks in tqdm(train, desc=f"{task} {epoch + 1}/{args.epochs_per_task}"):
+                validate_targets(masks, args.num_classes)
                 images, masks = images.to(device, non_blocking=True), masks.to(device, non_blocking=True)
                 loss = criterion(model(images), masks) + ewc.penalty()
                 if len(replay):
