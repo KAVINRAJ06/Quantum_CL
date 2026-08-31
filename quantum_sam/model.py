@@ -35,7 +35,7 @@ class QuantumSAMSegmenter(nn.Module):
             image_embeddings=image_embeddings,
             image_positional_embeddings=self.sam.get_image_wide_positional_embeddings().to(image_embeddings),
             sparse_prompt_embeddings=sparse, dense_prompt_embeddings=dense,
-            multimask_output=True, output_attentions=False,
+            multimask_output=True,
         )
         return F.interpolate(outputs.pred_masks.squeeze(1), size=pixel_values.shape[-2:], mode="bilinear", align_corners=False)
 
