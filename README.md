@@ -21,7 +21,7 @@ Copy `configs/openearthmap.yaml`, then set these values:
 - `data.images` and `data.masks`: folder patterns, with `{split}` replaced by `train` or `val`.
 - `image_suffix` / `mask_suffix`: text removed before filename pairing, such as `_mask`.
 - `palette`: `auto` accepts indexed PNG masks and deterministically maps a consistent RGB palette; use an explicit mapping when class IDs must follow a prescribed order.
-- `num_classes` and `training`: model and runtime settings.
+- `num_classes` and `training`: model and runtime settings. The supplied OpenEarthMap Kaggle mirror has nine labels (background plus eight land-cover classes), so its config uses `num_classes: 9`.
 
 The loader searches subfolders recursively, pairs images and masks by normalized stems, preserves indexed class IDs, resizes images bilinearly and masks with nearest-neighbour interpolation, and validates class counts before training.
 

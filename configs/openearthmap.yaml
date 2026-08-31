@@ -1,5 +1,5 @@
 # OpenEarthMap training configuration. Change only this file for another dataset.
-num_classes: 8
+num_classes: 9
 sam_model: facebook/sam-vit-base
 freeze_sam: true
 
