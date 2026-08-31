@@ -37,7 +37,8 @@ class QuantumSAMSegmenter(nn.Module):
             sparse_prompt_embeddings=sparse, dense_prompt_embeddings=dense,
             multimask_output=True,
         )
-        return F.interpolate(outputs.pred_masks.squeeze(1), size=pixel_values.shape[-2:], mode="bilinear", align_corners=False)
+        pred_masks = outputs.pred_masks if hasattr(outputs, "pred_masks") else outputs[0]
+        return F.interpolate(pred_masks.squeeze(1), size=pixel_values.shape[-2:], mode="bilinear", align_corners=False)
 
     def forward(self, pixel_values: torch.Tensor) -> torch.Tensor:
         if self.sam is None:
