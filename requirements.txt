@@ -5,3 +5,4 @@ pennylane>=0.38
 Pillow>=10.0
 numpy>=1.26
 tqdm>=4.66
+PyYAML>=6.0

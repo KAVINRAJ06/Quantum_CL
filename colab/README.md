@@ -1,7 +1,5 @@
 # Google Colab
 
-Open `Quantum_SAM_Continual_Training.ipynb` in Google Colab and run its cells in order. It clones this repository, installs the Colab-specific dependencies without replacing Colab's PyTorch build, downloads both Kaggle datasets, prepares their paired image/mask layout, and starts sequential training.
+Use [Quantum_SAM_OpenEarthMap_Colab.ipynb](Quantum_SAM_OpenEarthMap_Colab.ipynb) for the clean OpenEarthMap-only workflow. It installs Colab-safe dependencies, validates GPU availability, downloads and prepares the dataset, checks the discovered pairs, runs the two smoke tests, then starts training from `configs/openearthmap.yaml`.
 
-You need a Kaggle account and API token. Download `kaggle.json` from Kaggle Settings > API, then upload it only when the notebook asks. Do not commit that file.
-
-After the preparation cell, inspect the reported image/mask counts. If OpenEarthMap was distributed as RGB palette masks, convert them with `scripts/convert_color_masks.py` using the palette documented by that specific Kaggle mirror before training.
+For a new dataset, copy `configs/openearthmap.yaml` and edit `data.root`, `images`, `masks`, optional filename suffixes, `num_classes`, and `training`. The loader discovers matching filenames recursively and handles indexed masks or a consistent RGB palette automatically.

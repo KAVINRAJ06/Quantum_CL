@@ -1,0 +1,23 @@
+# OpenEarthMap training configuration. Change only this file for another dataset.
+num_classes: 8
+sam_model: facebook/sam-vit-base
+freeze_sam: true
+
+data:
+  # Set this to your extracted dataset location (or /content/data/openearthmap in Colab).
+  root: ../data/openearthmap
+  images: images/{split}
+  masks: masks/{split}
+  # 'auto' preserves indexed masks and deterministically indexes RGB palettes.
+  palette: auto
+  recursive: true
+  image_suffix: ""
+  mask_suffix: ""
+
+training:
+  image_size: 512
+  batch_size: 2
+  epochs_per_task: 15
+  qubits: 8
+  lr: 0.0002
+  workers: 2

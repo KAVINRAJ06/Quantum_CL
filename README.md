@@ -1,43 +1,37 @@
 # Quantum SAM Continual Segmentation
 
-Parameter-efficient semantic segmentation for aerial imagery. The model uses a frozen (or selectively fine-tuned) Segment Anything Model (SAM) image encoder and SAM mask decoder, with a PennyLane variational quantum circuit only at the compact image-embedding bottleneck. Sequential-domain training is supported with experience replay and Elastic Weight Consolidation (EWC).
+Configurable semantic segmentation for aerial imagery using a SAM encoder/decoder with a compact PennyLane bottleneck. It supports standard indexed class masks and RGB palette masks, pairs files automatically by filename, and trains on CUDA without CPU/CUDA tensor mixing.
 
-## Installation
+## Run OpenEarthMap
+
+Use the clean Colab notebook: [colab/Quantum_SAM_OpenEarthMap_Colab.ipynb](colab/Quantum_SAM_OpenEarthMap_Colab.ipynb). It downloads and prepares OpenEarthMap only, validates the dataset, then trains from the YAML configuration.
+
+Locally:
 
 ```powershell
 python -m pip install -r requirements.txt
+python train.py --config configs/openearthmap.yaml
 ```
 
-For the full Google Colab workflow, open [the Colab notebook](colab/Quantum_SAM_Continual_Training.ipynb). It retains Colab's PyTorch build, requests your Kaggle API token interactively, downloads both supplied datasets, and launches the sequential training command.
+## Configure another dataset
 
-Install a SAM checkpoint from Hugging Face (for example `facebook/sam-vit-base`) before training. It is downloaded automatically by Transformers on first use.
+Copy `configs/openearthmap.yaml`, then set these values:
 
-## Dataset layout
+- `data.root`: extracted dataset directory.
+- `data.images` and `data.masks`: folder patterns, with `{split}` replaced by `train` or `val`.
+- `image_suffix` / `mask_suffix`: text removed before filename pairing, such as `_mask`.
+- `palette`: `auto` accepts indexed PNG masks and deterministically maps a consistent RGB palette; use an explicit mapping when class IDs must follow a prescribed order.
+- `num_classes` and `training`: model and runtime settings.
 
-The loader intentionally uses a simple, inspectable paired-file layout. Prepare each dataset as:
+The loader searches subfolders recursively, pairs images and masks by normalized stems, preserves indexed class IDs, resizes images bilinearly and masks with nearest-neighbour interpolation, and validates class counts before training.
 
-```
-data/
-  openearthmap/
-    images/{train,val}/*.jpg
-    masks/{train,val}/*.png
-  loveda/
-    images/{train,val}/*.png
-    masks/{train,val}/*.png
-```
+## Important fixes
 
-Image and mask names must share the stem. Masks must be indexed PNGs containing class IDs from `0` to `num_classes - 1`; use `255` for ignored pixels. OpenEarthMap has 8 semantic classes. LoveDA's official masks contain 7 foreground classes; the default configuration includes a background class, giving 8 output classes. Inspect the Kaggle mirror's mask format before setting `--num-classes`. If it has RGB colour masks, first convert them with your verified palette using `scripts/convert_color_masks.py`; the training loader deliberately refuses to guess colour-to-class mappings.
+The PennyLane circuit is host-evaluated by `default.qubit`; the pipeline now explicitly returns its result to the embedding’s CUDA device. SAM inputs are also internally resized to SAM’s required encoder size and logits are resized back to the configured training crop size. This fixes the common `cuda:0 and cpu` mismatch and fixed-position-embedding shape failures.
 
-## Train sequentially
-
-```powershell
-python train.py --data-root data --tasks openearthmap loveda --num-classes 8 --sam-model facebook/sam-vit-base --image-size 512 --batch-size 2 --epochs-per-task 15 --qubits 8 --freeze-sam
-```
-
-For a quick CPU/API check without data or a SAM download:
+Run the no-data checks with:
 
 ```powershell
 python smoke_test.py
+python tests/test_data_pipeline.py
 ```
-
-The circuit is simulated with `default.qubit`; it is not evidence of an advantage over a comparable classical bottleneck. Full SAM training is memory-intensive; start with ViT-B, frozen SAM, 512px crops, and eight qubits.
