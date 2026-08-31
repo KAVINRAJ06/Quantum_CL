@@ -23,7 +23,12 @@ class QuantumBottleneck(nn.Module):
         self.norm = nn.GroupNorm(8, channels)
     def forward(self, embedding: torch.Tensor) -> torch.Tensor:
         angles = self.to_angles(embedding)
-        # PennyLane's simulator produces host tensors. Explicitly return the
-        # result to the model device, preventing CUDA/CPU residual failures.
-        features = torch.stack([self.circuit(x, self.weights) for x in angles]).to(device=embedding.device, dtype=embedding.dtype)
+        # ``default.qubit`` is a CPU simulator. Move both circuit inputs and
+        # circuit parameters to its device, then return its tiny descriptor to
+        # CUDA. ``Tensor.to`` remains differentiable, so gradients flow back to
+        # the original GPU parameters through the copies.
+        cpu_angles = angles.to(device="cpu")
+        cpu_weights = self.weights.to(device="cpu")
+        features = torch.stack([self.circuit(x, cpu_weights) for x in cpu_angles])
+        features = features.to(device=embedding.device, dtype=embedding.dtype)
         return self.norm(embedding + self.from_quantum(features).unsqueeze(-1).unsqueeze(-1))
