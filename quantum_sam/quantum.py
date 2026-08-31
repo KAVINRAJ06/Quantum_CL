@@ -29,6 +29,9 @@ class QuantumBottleneck(nn.Module):
         # the original GPU parameters through the copies.
         cpu_angles = angles.to(device="cpu")
         cpu_weights = self.weights.to(device="cpu")
-        features = torch.stack([self.circuit(x, cpu_weights) for x in cpu_angles])
+        circuit_results = [self.circuit(x, cpu_weights) for x in cpu_angles]
+        # PennyLane versions return either a Tensor or a list of expectation tensors.
+        circuit_results = [torch.stack(result) if isinstance(result, (list, tuple)) else result for result in circuit_results]
+        features = torch.stack(circuit_results)
         features = features.to(device=embedding.device, dtype=embedding.dtype)
         return self.norm(embedding + self.from_quantum(features).unsqueeze(-1).unsqueeze(-1))
